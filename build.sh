@@ -13,7 +13,7 @@ NDK=`readlink -f $NDK`
 
 export CLANG=1
 
-for ARCH in armeabi armeabi-v7a arm64-v8a x86 x86_64; do
+for ARCH in armeabi-v7a; do
 
 cd $BUILDDIR
 
@@ -40,7 +40,7 @@ cd $BUILDDIR/$ARCH
 
 # =========== libiconv.so ===========
 
-[ -e libiconv.so ] || {
+true || [ -e libiconv.so ] || {
 
 	rm -rf libiconv-1.15
 
@@ -163,12 +163,14 @@ cd $BUILDDIR/$ARCH
 
 	rm -rf icu
 
-	tar xvf ../icu4c-59_1-src.tgz
+	[ -e ../icu4c-55_1-src.tgz ] || exit 1
+
+	tar xvf ../icu4c-55_1-src.tgz
 
 	cd icu/source
 
-	cp -f $BUILDDIR/config.sub .
-	cp -f $BUILDDIR/config.guess .
+	#cp -f $BUILDDIR/config.sub .
+	#cp -f $BUILDDIR/config.guess .
 
 	[ -d cross ] || {
 		mkdir cross

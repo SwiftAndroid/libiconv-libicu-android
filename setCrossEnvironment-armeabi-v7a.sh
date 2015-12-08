@@ -1,5 +1,7 @@
 #!/bin/sh
 
+NDK_STL="libc++"
+
 IFS='
 '
 
@@ -21,7 +23,8 @@ NDK=`readlink -f $NDK`
 #echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
-[ -z "$PLATFORMVER" ] && PLATFORMVER=android-15
+[ -z "$PLATFORMVER" ] && PLATFORMVER=android-16
+GCCVER=4.8
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
 	LOCAL_PATH=`realpath $LOCAL_PATH`
@@ -29,7 +32,13 @@ else
 	LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 fi
 ARCH=armeabi-v7a
-
+STL_CFLAGS="-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
+-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH/include"
+STL_LDFLAGS="-L$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH"
+if [[ "$NDK_STL" -eq "libc++" ]] ; then
+	STL_CFLAGS="-isystem$NDK/sources/cxx-stl/llvm-libc++/include"
+	STL_LDFLAGS="-L$NDK/sources/cxx-stl/llvm-libc++/libs/$ARCH"
+fi
 
 CFLAGS="
 -fexceptions
