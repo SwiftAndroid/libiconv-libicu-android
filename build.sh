@@ -193,7 +193,6 @@ cd $BUILDDIR/$ARCH
 		--prefix=`pwd`/../../ \
 		--with-cross-build=`pwd`/cross \
 		--enable-static --disable-shared \
-		--with-data-packaging=archive \
 		|| exit 1
 
 #		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include" \
