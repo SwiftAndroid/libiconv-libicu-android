@@ -9,7 +9,7 @@ uname -s | grep -i "linux" && NCPU=`cat /proc/cpuinfo | grep -c -i processor`
 
 NDK=`which ndk-build`
 NDK=`dirname $NDK`
-NDK=`readlink -f $NDK`
+#NDK=`readlink -f $NDK`
 
 export CLANG=1
 
@@ -180,8 +180,8 @@ cd $BUILDDIR/$ARCH
 		cd ..
 	} || exit 1
 
-	sed -i "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
-	sed -i "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
+	sed -i.tmp "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
+	sed -i.tmp "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
@@ -199,13 +199,13 @@ cd $BUILDDIR/$ARCH
 #		ICULEHB_LIBS="-licu-le-hb" \
 #		--enable-layoutex \
 
-	sed -i "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
+	sed -i.tmp "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make -j$NCPU VERBOSE=1 || exit 1
 
-	sed -i "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
+	sed -i.tmp "s@^prefix *= *.*@prefix = `pwd`/../../@" icudefs.mk || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
