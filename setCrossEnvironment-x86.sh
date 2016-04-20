@@ -5,7 +5,7 @@ IFS='
 
 MYARCH=linux-x86_64
 if uname -s | grep -i "linux" > /dev/null ; then
-	MYARCH=linux-x86_64
+	MYARCH=linux-`arch`
 fi
 if uname -s | grep -i "darwin" > /dev/null ; then
 	MYARCH=darwin-x86_64
