@@ -5,7 +5,7 @@ IFS='
 
 MYARCH=linux-x86_64
 if uname -s | grep -i "linux" > /dev/null ; then
-	MYARCH=linux-x86_64
+	MYARCH=linux-`arch`
 fi
 if uname -s | grep -i "darwin" > /dev/null ; then
 	MYARCH=darwin-x86_64
@@ -18,7 +18,6 @@ NDK=`which ndk-build`
 NDK=`dirname $NDK`
 #NDK=`readlink -f $NDK`
 
-#echo NDK $NDK
 GCCPREFIX=arm-linux-androideabi
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
 [ -z "$PLATFORMVER" ] && PLATFORMVER=android-15
