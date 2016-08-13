@@ -82,6 +82,7 @@ cd $BUILDDIR/$ARCH
 	[ -e ../icu4c-55_1-src.tgz ] || exit 1
 
 	tar xvf ../icu4c-55_1-src.tgz
+	patch -p0 < ../icu_add_elf_info.patch
 
 	cd icu/source
 
