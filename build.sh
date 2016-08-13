@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# USAGE: ./build.sh [arch1=optional] [arch2=optional] ...
+# arch1 = defaults to armeabi-v7a if empty
+# arch* = armeabi-v7a|armeabi|mips|x86|x86_64
+# arch* = only armeabi-v7a and x86_64 are tested and known to be working by now
+
 set -x
 
 export BUILDDIR=`pwd`
@@ -11,7 +16,22 @@ NDK=`which ndk-build`
 NDK=`dirname $NDK`
 #NDK=`readlink -f $NDK`
 
-for ARCH in armeabi-v7a; do
+ARCHS=${@:-armeabi-v7a}
+
+for ARCH in $ARCHS; do
+
+# =========== figure out host based on arch ===========
+
+case $ARCH in
+	armeabi-v7a) 	HOST=arm-linux-androideabi; ;;
+	armeabi)	HOST=arm-linux-androideabi; ;;
+	mips)		HOST=mipsel-linux-android; ;;
+	x86)		HOST=i686-linux-android; ;;
+	x86_64) 	HOST=x86_64-linux-android; ;;
+	*) 		echo "Unknwon arch '$ARCH'..."; exit 1; ;;
+esac
+
+echo "Building arch '$ARCH'..."
 
 cd $BUILDDIR
 mkdir -p $ARCH
@@ -50,7 +70,7 @@ true || [ -e libiconv.so ] || {
 		LDFLAGS="-L$BUILDDIR/$ARCH -landroid_support" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
-		--host=arm-linux-androideabi \
+		--host=$HOST \
 		--prefix=`pwd`/.. \
 		--enable-static --enable-shared \
 		|| exit 1
@@ -105,7 +125,7 @@ cd $BUILDDIR/$ARCH
 		LIBS="-L$BUILDDIR/$ARCH -landroid_support -lc++_shared -lstdc++" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
-		--host=arm-linux-androideabi \
+		--host=$HOST \
 		--prefix=`pwd`/../../ \
 		--with-cross-build=`pwd`/cross \
 		--enable-static --enable-shared \
