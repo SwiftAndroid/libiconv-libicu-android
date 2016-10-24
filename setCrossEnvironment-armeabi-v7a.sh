@@ -40,7 +40,7 @@ STL_CFLAGS="-isystem$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/include \
 STL_LDFLAGS="-L$NDK/sources/cxx-stl/gnu-libstdc++/$GCCVER/libs/$ARCH"
 STL_LDLIB="-lgnustl_shared -lsupc++"
 if [[ "$NDK_STL" == "libc++" ]] ; then
-	STL_CFLAGS="-isystem$NDK/sources/cxx-stl/llvm-libc++/libcxx/include"
+	STL_CFLAGS="-isystem$NDK/sources/cxx-stl/llvm-libc++/include"
 	STL_LDFLAGS="-L$NDK/sources/cxx-stl/llvm-libc++/libs/$ARCH"
 	STL_LDLIB="-lc++_shared"
 fi
