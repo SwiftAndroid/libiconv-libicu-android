@@ -16,10 +16,15 @@ echo "warning: this script assumes it's running from the root of the libiconv-li
 # Create armeabi-v7a dir
 mkdir armeabi-v7a && cd armeabi-v7a
 tar xvf ../icu4c-55_1-src.tgz
+cd ..
 
-# Edit icu configure file
+# Patch icu configure file
+patch -i swift-android-source-patches/build.patch 
 
-# Edit build.sh file
+# Patch build.sh file
+cd armeabi-v7a/icu/source/
+patch -i ../../../swift-android-source-patches/icu-configure.patch
+cd ../../..
 
 # 🎉 Run build.sh, with the edited sources
 ./build.sh
