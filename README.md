@@ -1,6 +1,13 @@
 libiconv-libicu-android
 =======================
 
+## Swift android instructions
+
+Follow the original instructions, but instead of step (3), run ./build-android.sh instead
+
+
+## Original instructions
+
 Port of libiconv and libicu to Android
 
 You will need NDK r15, curl, autoconf, automake, libtool, and git installed.
