@@ -1,0 +1,34 @@
+--- build.sh	2018-01-19 09:56:47.000000000 -0800
++++ build.sh.new	2018-01-19 09:56:38.000000000 -0800
+@@ -77,11 +77,11 @@
+ 
+ # =========== libicuXX.so ===========
+ 
+-[ -e libicuuc.so ] || {
++[ -e libicuucswifswiftt.so ] || {
+ 
+-	[ -e ../icu4c-55_1-src.tgz ] || exit 1
++# 	[ -e ../icu4c-55_1-src.tgz ] || exit 1
+ 
+-	tar xvf ../icu4c-55_1-src.tgz
++# 	tar xvf ../icu4c-55_1-src.tgz
+ 
+ 	cd icu/source
+ 
+@@ -104,6 +104,7 @@
+ 		./configure \
+ 		--host=arm-linux-androideabi \
+ 		--prefix=`pwd`/../../ \
++		--with-library-suffix=swift \
+ 		--with-cross-build=`pwd`/cross \
+ 		--enable-static --enable-shared \
+ 		|| exit 1
+@@ -119,7 +120,7 @@
+ 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+ 		make V=1 install || exit 1
+ 
+-	for f in libicudata libicutest libicui18n libicuio libicule libiculx libicutu libicuuc; do
++	for f in libicudataswift libicutestswift libicui18nswift libicuioswift libiculeswift libiculxswift libicutuswift libicuucswift; do
+ 		cp -f -H ../../lib/$f.so ../../
+ 		cp -f ../../lib/$f.a ../../
+ 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
