@@ -159,13 +159,19 @@ cd $BUILDDIR/$ARCH
 
 cd $BUILDDIR/$ARCH
 
-[ -e libicuuc.a ] || {
+[ -e libicuuc$LIBSUFFIX.a ] || {
 
 	rm -rf icu
 
 	[ -e ../icu4c-55_1-src.tgz ] || exit 1
 
 	tar xvf ../icu4c-55_1-src.tgz
+
+	# The ENVVAR LIBSUFFIX should add the suffix only to the libname and not to the symbols.
+	# ToDo: Find the right way in Swift to refer to an alternative library with symbol prefixing or any other method to remove this.
+	if $[ -n "$LIBSUFFIX" ]; then
+		patch -p0 < ../patches/icu_suffix_only_on_libname.patch
+	fi
 
 	cd icu/source
 
@@ -189,6 +195,7 @@ cd $BUILDDIR/$ARCH
 		./configure \
 		--host=$GCCPREFIX \
 		--prefix=`pwd`/../../ \
+		--with-library-suffix=$LIBSUFFIX \
 		--with-cross-build=`pwd`/cross \
 		--enable-static --disable-shared \
 		|| exit 1
@@ -208,7 +215,7 @@ cd $BUILDDIR/$ARCH
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
-	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc; do
+	for f in libicudata$LIBSUFFIX libicutest$LIBSUFFIX libicui18n$LIBSUFFIX libicuio$LIBSUFFIX libicule$LIBSUFFIX libiculx$LIBSUFFIX libicutu$LIBSUFFIX libicuuc$LIBSUFFIX; do
 		#cp -f -H ../../lib/$f.so ../../
 		cp -f ../../lib/$f.a ../../
 		#$BUILDDIR/setCrossEnvironment-$ARCH.sh \
