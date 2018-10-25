@@ -60,12 +60,19 @@ $CFLAGS"
 
 CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
 
+LIBANDROID_SUPPORT_PATH=$NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/x86_64/libandroid_support.a
+if [ -f $LIBANDROID_SUPPORT_PATH ] ; then
+	LIBANDROID_SUPPORT_LDFLAG=$LIBANDROID_SUPPORT_PATH
+else
+	LIBANDROID_SUPPORT_LDFLAG=
+fi
+
 LDFLAGS="
 -shared
 --sysroot $NDK/platforms/android-21/arch-x86_64
 $NDK/sources/cxx-stl/llvm-libc++/libs/x86_64/libc++_static.a
 $NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/x86_64/libc++abi.a
-$NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/x86_64/libandroid_support.a
+$LIBANDROID_SUPPORT_LDFLAG
 -latomic -Wl,--exclude-libs,libatomic.a
 -gcc-toolchain
 $NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64

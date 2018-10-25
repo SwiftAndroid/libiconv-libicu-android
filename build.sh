@@ -36,21 +36,6 @@ echo "ARCH $ARCH GCCPREFIX $GCCPREFIX"
 mkdir -p $ARCH
 cd $BUILDDIR/$ARCH
 
-# =========== libandroid_support.a ===========
-
-[ -e libandroid_support.a ] || {
-	mkdir -p android_support
-	cd android_support
-	ln -sf $NDK/sources/android/support jni
-
-	#ndk-build -j$NCPU APP_ABI=$ARCH APP_MODULES=android_support LIBCXX_FORCE_REBUILD=true CLANG=1 || exit 1
-	#cp -f obj/local/$ARCH/libandroid_support.a ../
-	ln -sf $NDK/sources/cxx-stl/llvm-libc++/libs/$ARCH/libandroid_support.a ../
-
-} || exit 1
-
-cd $BUILDDIR/$ARCH
-
 # =========== libiconv.so ===========
 
 [ -e libiconv.so ] || [ $SKIP_ICONV ] || {
@@ -209,7 +194,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
+		LIBS="-L$BUILDDIR/$ARCH `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
 		env ac_cv_func_strtod_l=no \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
@@ -360,7 +345,7 @@ cd $BUILDDIR/$ARCH
 
 	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
+		LIBS="-L$BUILDDIR/$ARCH `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
 		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include/icu-le-hb" \
 		ICULEHB_LIBS="-licu-le-hb" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \

@@ -65,12 +65,19 @@ $CFLAGS"
 
 CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
 
+LIBANDROID_SUPPORT_PATH=$NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/armeabi-v7a/libandroid_support.a
+if [ -f $LIBANDROID_SUPPORT_PATH ] ; then
+	LIBANDROID_SUPPORT_LDFLAG=$LIBANDROID_SUPPORT_PATH
+else
+	LIBANDROID_SUPPORT_LDFLAG=
+fi
+
 LDFLAGS="
 -shared
 --sysroot $NDK/platforms/android-14/arch-arm
 $NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libc++_static.a
 $NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/armeabi-v7a/libc++abi.a
-$NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/armeabi-v7a/libandroid_support.a
+$LIBANDROID_SUPPORT_LDFLAG
 $NDK/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a/libunwind.a
 -latomic -Wl,--exclude-libs,libatomic.a
 -gcc-toolchain
