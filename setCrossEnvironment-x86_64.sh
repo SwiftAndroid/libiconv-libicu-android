@@ -52,7 +52,7 @@ $NDK/toolchains/x86_64-4.9/prebuilt/linux-x86_64
 -target
 x86_64-none-linux-android
 -fPIC
---sysroot $NDK/platforms/android-21/arch-x86_64
+--sysroot $NDK/platforms/$PLATFORMVER/arch-x86_64
 -isystem $NDK/sysroot/usr/include
 -isystem $NDK/sysroot/usr/include/x86_64-linux-android
 -D__ANDROID_API__=21
@@ -62,7 +62,7 @@ CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
 
 LDFLAGS="
 -shared
---sysroot $NDK/platforms/android-21/arch-x86_64
+--sysroot $NDK/platforms/$PLATFORMVER/arch-x86_64
 $NDK/sources/cxx-stl/llvm-libc++/libs/x86_64/libc++_static.a
 $NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/x86_64/libc++abi.a
 $NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/x86_64/libandroid_support.a

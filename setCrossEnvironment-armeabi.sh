@@ -57,7 +57,7 @@ armv5te-none-linux-androideabi14
 -mthumb
 -fpic
 -fno-integrated-as
---sysroot $NDK/platforms/android-14/arch-arm
+--sysroot $NDK/platforms/$PLATFORMVER/arch-arm
 -isystem $NDK/sysroot/usr/include
 -isystem $NDK/sysroot/usr/include/arm-linux-androideabi
 -D__ANDROID_API__=14
@@ -67,7 +67,7 @@ CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
 
 LDFLAGS="
 -shared
---sysroot $NDK/platforms/android-14/arch-arm
+--sysroot $NDK/platforms/$PLATFORMVER/arch-arm
 $NDK/sources/cxx-stl/llvm-libc++/libs/armeabi/libc++_static.a
 $NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/armeabi/libc++abi.a
 $NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/armeabi/libandroid_support.a
