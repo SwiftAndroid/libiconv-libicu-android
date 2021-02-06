@@ -22,8 +22,8 @@ fi
 
 export CLANG=1
 
-if [ ! $ARCHS ]; then
-  ARCHS='armeabi armeabi-v7a arm64-v8a x86 x86_64'
+if [ -z "$ARCHS" ]; then
+  ARCHS='arm64-v8a armeabi-v7a x86 x86_64'
 fi
 
 for ARCH in $ARCHS; do
@@ -34,21 +34,6 @@ GCCPREFIX="`./setCrossEnvironment-$ARCH.sh sh -c 'basename $STRIP | sed s/-strip
 echo "ARCH $ARCH GCCPREFIX $GCCPREFIX"
 
 mkdir -p $ARCH
-cd $BUILDDIR/$ARCH
-
-# =========== libandroid_support.a ===========
-
-[ -e libandroid_support.a ] || {
-	mkdir -p android_support
-	cd android_support
-	ln -sf $NDK/sources/android/support jni
-
-	#ndk-build -j$NCPU APP_ABI=$ARCH APP_MODULES=android_support LIBCXX_FORCE_REBUILD=true CLANG=1 || exit 1
-	#cp -f obj/local/$ARCH/libandroid_support.a ../
-	ln -sf $NDK/sources/cxx-stl/llvm-libc++/libs/$ARCH/libandroid_support.a ../
-
-} || exit 1
-
 cd $BUILDDIR/$ARCH
 
 # =========== libiconv.so ===========
@@ -68,8 +53,8 @@ cd $BUILDDIR/$ARCH
 
 	sed -i,tmp 's/MB_CUR_MAX/1/g' lib/loop_wchar.h
 
-	env CFLAGS="-I$NDK/sources/android/support/include -D_IO_getc=getc" \
-		LDFLAGS="-L$BUILDDIR/$ARCH -landroid_support" \
+	env CFLAGS="-D_IO_getc=getc" \
+		LDFLAGS="-L$BUILDDIR/$ARCH" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
@@ -83,7 +68,7 @@ cd $BUILDDIR/$ARCH
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-		sh -c '$LD $CFLAGS $LDFLAGS -shared libcharset/lib/.libs/*.o -o libcharset/lib/.libs/libcharset.so' || exit 1
+		sh -c '$LD $CFLAGS $LDFLAGS -shared -Wl,-soname=libcharset.so libcharset/lib/.libs/*.o -o libcharset/lib/.libs/libcharset.so' || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
@@ -91,13 +76,16 @@ cd $BUILDDIR/$ARCH
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-		sh -c '$LD $CFLAGS $LDFLAGS -shared lib/.libs/*.o -o lib/.libs/libiconv.so' || exit 1
+		sh -c '$LD $CFLAGS $LDFLAGS -shared -Wl,-soname=libiconv.so lib/.libs/*.o -o lib/.libs/libiconv.so' || exit 1
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make V=1 || echo "Did you know that libtool contributes to global warming by overheating your CPU?"
 
 	cp -f lib/.libs/libiconv.so preload/preloadable_libiconv.so
+
+	echo 'all install:' > src/Makefile
+	echo '	touch $@' >> src/Makefile
 
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
@@ -110,6 +98,8 @@ cd $BUILDDIR/$ARCH
 	cd ..
 
 	for f in libiconv libcharset; do
+		cp -f lib64/$f.so ./ # libtool invents new dumb places to install libraries to
+		cp -f lib32/$f.so ./
 		cp -f lib/$f.so ./
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 			sh -c '$STRIP'" $f.so"
@@ -131,9 +121,9 @@ cd $BUILDDIR/$ARCH
 
 	sed -i,tmp 's/ld_shlibs=no/ld_shlibs=yes/g' ./configure
 
-	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions -I$BUILDDIR/$ARCH/include" \
+	env CFLAGS="-frtti -fexceptions -I$BUILDDIR/$ARCH/include" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support" \
+		LIBS="-L$BUILDDIR/$ARCH" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
@@ -160,6 +150,8 @@ cd $BUILDDIR/$ARCH
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		make V=1 install || exit 1
 
+	mkdir -p ../lib
+
 	env PATH=`pwd`:$PATH \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		sh -c '$AR rcs ../lib/libharfbuzz.a src/.libs/*.o src/hb-ucdn/.libs/*.o' || exit 1
@@ -176,7 +168,7 @@ cd $BUILDDIR/$ARCH
 
 	rm -rf icu
 
-	tar xvf ../icu4c-59_1-src.tgz
+	tar xvf ../icu4c-62_1-src.tgz
 
   # The ENVVAR LIBSUFFIX should add the suffix only to the libname and not to the symbols.
   # ToDo: Find the right way in Swift to refer to an alternative library with symbol prefixing or any other method to
@@ -187,9 +179,6 @@ cd $BUILDDIR/$ARCH
 
 	cd icu/source
 
-	cp -f $BUILDDIR/config.sub .
-	cp -f $BUILDDIR/config.guess .
-
 	[ -d cross ] || {
 		mkdir cross
 		cd cross
@@ -198,8 +187,12 @@ cd $BUILDDIR/$ARCH
 		cd ..
 	} || exit 1
 
+	cp -f $BUILDDIR/config.sub .
+	cp -f $BUILDDIR/config.guess .
+
 	sed -i,tmp "s@LD_SONAME *=.*@LD_SONAME =@g" config/mh-linux
 	sed -i,tmp "s%ln -s *%cp -f \$(dir \$@)/%g" config/mh-linux
+	sed -i,tmp "s/#define U_OVERRIDE_CXX_ALLOCATION 1/#define U_OVERRIDE_CXX_ALLOCATION 0/g" common/unicode/uconfig.h
 
 	if [ $SHARED_ICU ]; then
 		libtype='--enable-shared --disable-static'
@@ -207,10 +200,10 @@ cd $BUILDDIR/$ARCH
 		libtype='--enable-static --disable-shared'
 	fi
 
-	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
+	env CFLAGS="-frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
-		env ac_cv_func_strtod_l=no \
+		LIBS="-L$BUILDDIR/$ARCH `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
+		ac_cv_func_strtod_l=no \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
 		./configure \
 		--host=$GCCPREFIX \
@@ -220,10 +213,6 @@ cd $BUILDDIR/$ARCH
 		$libtype \
 		--with-data-packaging=archive \
 		|| exit 1
-
-#		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include" \
-#		ICULEHB_LIBS="-licu-le-hb" \
-#		--enable-layoutex \
 
 	sed -i,tmp "s@^prefix *= *.*@prefix = .@" icudefs.mk || exit 1
 
@@ -239,12 +228,14 @@ cd $BUILDDIR/$ARCH
 
 	for f in libicudata$LIBSUFFIX libicutest$LIBSUFFIX libicui18n$LIBSUFFIX libicuio$LIBSUFFIX libicutu$LIBSUFFIX libicuuc$LIBSUFFIX; do
 		if [ $SHARED_ICU ]; then
+			cp -f -H ../../lib64/$f.so ../../ # Maybe it's here, maybe not, who knows
+			cp -f -H ../../lib32/$f.so ../../
 			cp -f -H ../../lib/$f.so ../../
 		else
+			cp -f ../../lib64/$f.a ../../ # Different libtool versions do things differently
+			cp -f ../../lib32/$f.a ../../
 			cp -f ../../lib/$f.a ../../
 		fi
-		#$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-		#	sh -c '$STRIP'" ../../$f.so"
 	done
 
 } || exit 1
@@ -263,10 +254,16 @@ cd $BUILDDIR/$ARCH
 
 	sed -i,tmp 's/ld_shlibs=no/ld_shlibs=yes/g' ./configure
 
-	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
+	touch dummy.c
+	env PATH=`pwd`:$PATH \
+		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
+		sh -c '$CC $CFLAGS -c dummy.c -o src/crtbegin_so.o' || exit 1
+	cp -f src/crtbegin_so.o src/crtend_so.o
+
+	env CFLAGS="-frtti -fexceptions" \
 		CXXFLAGS="-std=c++11" \
 		LDFLAGS="-frtti -fexceptions" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support" \
+		LIBS="-L$BUILDDIR/$ARCH" \
 		HARFBUZZ_CFLAGS="-I$BUILDDIR/$ARCH/include/harfbuzz" \
 		HARFBUZZ_LIBS="-L$BUILDDIR/$ARCH/lib -lharfbuzz" \
 		ICU_CFLAGS="-I$BUILDDIR/$ARCH/include" \
@@ -347,6 +344,8 @@ EOF
 		make V=1 install || exit 1
 
 	cd ..
+	cp -f lib64/libicu-le-hb.a ./ # Try every possibility
+	cp -f lib32/libicu-le-hb.a ./
 	cp -f lib/libicu-le-hb.a ./
 }
 
@@ -358,9 +357,9 @@ cd $BUILDDIR/$ARCH
 
 	cd icu/source
 
-	env CFLAGS="-I$NDK/sources/android/support/include -frtti -fexceptions" \
+	env CFLAGS="-frtti -fexceptions" \
 		LDFLAGS="-frtti -fexceptions -L$BUILDDIR/$ARCH/lib" \
-		LIBS="-L$BUILDDIR/$ARCH -landroid_support `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
+		LIBS="-L$BUILDDIR/$ARCH `$BUILDDIR/setCrossEnvironment-$ARCH.sh sh -c 'echo $LDFLAGS'`" \
 		ICULEHB_CFLAGS="-I$BUILDDIR/$ARCH/include/icu-le-hb" \
 		ICULEHB_LIBS="-licu-le-hb" \
 		$BUILDDIR/setCrossEnvironment-$ARCH.sh \
@@ -386,10 +385,7 @@ cd $BUILDDIR/$ARCH
 		make V=1 install || exit 1
 
 	for f in libicudata libicutest libicui18n libicuio libicutu libicuuc libiculx; do
-		#cp -f -H ../../lib/$f.so ../../
-		cp -f ../../lib/$f.a ../../ || exit 1
-		#$BUILDDIR/setCrossEnvironment-$ARCH.sh \
-		#	sh -c '$STRIP'" ../../$f.so"
+		cp -f ../../lib/$f.a ../../ || cp -f ../../lib64/$f.a ../../ || cp -f ../../lib32/$f.a ../../ || exit 1
 	done
 
 } || exit 1
