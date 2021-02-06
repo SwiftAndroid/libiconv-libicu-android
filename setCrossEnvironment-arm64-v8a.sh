@@ -16,9 +16,7 @@ elif uname -s | grep -i "windows" > /dev/null ; then
 fi
 
 #echo NDK $NDK
-GCCPREFIX=aarch64-linux-android
 [ -z "$NDK_TOOLCHAIN_VERSION" ] && NDK_TOOLCHAIN_VERSION=4.9
-[ -z "$PLATFORMVER" ] && PLATFORMVER=android-21
 LOCAL_PATH=`dirname $0`
 if which realpath > /dev/null ; then
 	LOCAL_PATH=`realpath $LOCAL_PATH`
@@ -26,70 +24,68 @@ else
 	LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 fi
 ARCH=arm64-v8a
+GCCPREFIX=aarch64-linux-android
+APILEVEL=21
 
 
 CFLAGS="
--fexceptions
--frtti
+-g
 -ffunction-sections
+-fdata-sections
 -funwind-tables
 -fstack-protector-strong
--Wno-invalid-command-line-argument
--Wno-unused-command-line-argument
 -no-canonical-prefixes
--I$NDK/sources/cxx-stl/llvm-libc++/include
--I$NDK/sources/cxx-stl/llvm-libc++abi/include
--I$NDK/sources/android/support/include
--DANDROID
--Wa,--noexecstack
 -Wformat
 -Werror=format-security
+-Oz
 -DNDEBUG
--O2
--g
--gcc-toolchain
-$NDK/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64
--target
-aarch64-none-linux-android
--fpic
---sysroot $NDK/platforms/android-21/arch-arm64
--isystem $NDK/sysroot/usr/include
--isystem $NDK/sysroot/usr/include/aarch64-linux-android
--D__ANDROID_API__=21
+-fPIC
 $CFLAGS"
 
 CFLAGS="`echo $CFLAGS | tr '\n' ' '`"
 
 LDFLAGS="
+-fPIC
+-g
+-ffunction-sections
+-fdata-sections
+-Wl,--gc-sections
+-funwind-tables
+-fstack-protector-strong
+-no-canonical-prefixes
+-Oz
+-Wl,--build-id
+-Wl,--warn-shared-textrel
+-Wl,--fatal-warnings
+-Wl,--no-undefined
+-Wl,-z,noexecstack
+-Qunused-arguments
+-Wl,-z,relro
+-Wl,-z,now
 -shared
---sysroot $NDK/platforms/android-21/arch-arm64
-$NDK/sources/cxx-stl/llvm-libc++/libs/arm64-v8a/libc++_static.a
-$NDK/sources/cxx-stl/llvm-libc++abi/../llvm-libc++/libs/arm64-v8a/libc++abi.a
-$NDK/sources/android/support/../../cxx-stl/llvm-libc++/libs/arm64-v8a/libandroid_support.a
--latomic -Wl,--exclude-libs,libatomic.a
--gcc-toolchain $NDK/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64
--target aarch64-none-linux-android -no-canonical-prefixes
--Wl,--build-id -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--warn-shared-textrel -Wl,--fatal-warnings
--lc -lm -lstdc++
+-landroid
+-llog
+-latomic
+-lm
 $LDFLAGS"
 
 LDFLAGS="`echo $LDFLAGS | tr '\n' ' '`"
 
-CC="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/clang"
-CXX="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/clang++"
+CC="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX$APILEVEL-clang"
+CXX="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX$APILEVEL-clang++"
 CPP="$CC -E $CFLAGS"
 
-env PATH=$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin:$LOCAL_PATH:$PATH \
+env \
 CFLAGS="$CFLAGS" \
 CXXFLAGS="$CXXFLAGS $CFLAGS -frtti -fexceptions" \
 LDFLAGS="$LDFLAGS" \
 CC="$CC" \
 CXX="$CXX" \
-RANLIB="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-ranlib" \
-LD="$CC" \
-AR="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-ar" \
+RANLIB="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX-ranlib" \
+LD="$CXX" \
+AR="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX-ar" \
 CPP="$CPP" \
-NM="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-nm" \
-AS="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-as" \
-STRIP="$NDK/toolchains/$GCCPREFIX-$NDK_TOOLCHAIN_VERSION/prebuilt/$MYARCH/bin/$GCCPREFIX-strip" \
+NM="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX-nm" \
+AS="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX-as" \
+STRIP="$NDK/toolchains/llvm/prebuilt/$MYARCH/bin/$GCCPREFIX-strip" \
 "$@"
